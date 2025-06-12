@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <title>타자기 프로그램</title>
+    <style>
+        body { text-align: center; margin-top: 20px; font-family: Arial, sans-serif; }
+        #paper { width: 400px; height: 150px; margin: 20px auto; padding: 10px; border: 2px solid #000; background: #fff; text-align: left; overflow-y: auto; }
+        #displayWindow { margin: 20px; font-size: 18px; font-weight: bold; padding: 10px; background: #f1f1f1; border: 1px solid #ccc; }
+        button { width: 35px; height: 35px; margin: 2px; font-size: 16px; }
+        .red { background: #fcc; } .blue { background: #ccf; }
+        .green { background: #cfc; } .yellow { background: #ffc; }
+    </style>
+</head>
+<body>
+
+
+<div>한양 | 빅데이터 | 2302593 | 정유진</div>
+
+
+// 타자기 Display window 추가
+<div id="displayWindow">타자기 입력이 여기에 나타납니다...</div>
+
+
+// 타자기 내용이 입력될 종이 
+<label id="paper"></label>
+
+
+<div id="keyboard"></div>
+
+
+<script>
+const keys = [
+    ['1','2','3','4','5','6','7','8','9','0'],
+    ['q','e','w','r','t','y','u','i','o','p'],
+    ['a','s','d','f','g','h','j','k','l',';'],
+    ['z','x','c','v','b','n','m',',','.','/']
+];
+const colors = ['red','blue','green','yellow'];
+let typedText = '';  
+
+
+keys.forEach((line, i) => {
+    document.getElementById('keyboard').innerHTML +=
+        line.map(k => `<button class="${colors[i]}" onclick="typeChar('${k}')">${k}</button>`).join('') + '<br>';
+});
+
+
+function typeChar(c) {
+    typedText += c;  
+    document.getElementById('paper').textContent = typedText;       document.getElementById('displayWindow').textContent = typedText; 
+}
+</script>
+
+
+</body>
+</html>
