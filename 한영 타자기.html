@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>타자기 프로그램</title>
+  <style>
+    body {
+      text-align: center;
+      margin-top: 20px;
+      font-family: Arial, sans-serif;
+    }
+    #info {
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #displayWindow, #paper {
+      width: 400px;
+      margin: 10px auto;
+      padding: 10px;
+      border: 2px solid #000;
+      background: #fff;
+      text-align: left;
+      font-size: 18px;
+      min-height: 80px;
+    }
+    #keyboard {
+      margin-top: 20px;
+    }
+    .key {
+      width: 35px;
+      height: 35px;
+      margin: 2px;
+      font-size: 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .red { background: #fcc; }
+    .blue { background: #ccf; }
+    .green { background: #cfc; }
+    .yellow { background: #ffc; }
+    .active {
+      box-shadow: 0 0 8px #333;
+    }
+    #toggle, #deleteBtn {
+      margin: 10px 5px;
+      padding: 8px 16px;
+      font-size: 16px;
+      font-weight: bold;
+      background: #ddd;
+      border: 1px solid #aaa;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    #langStatus {
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="info">한양 | 빅데이터 | 2302593 | 정유진</div>
+  <div id="langStatus">현재 언어: 영어</div>
+  <button id="toggle" onclick="toggleLanguage()">한/영</button>
+  <button id="deleteBtn" onclick="deleteLastChar()">← 지우기</button>
+  <div id="displayWindow">타자기 입력이 여기에 나타납니다...</div>
+  <label id="paper"></label>
+  <div id="keyboard"></div>
+
+
+  <script src="https://unpkg.com/hangul-js"></script>
+  <script>
+    const enKeys = [
+      ['1','2','3','4','5','6','7','8','9','0'],
+      ['q','e','w','r','t','y','u','i','o','p'],
+      ['a','s','d','f','g','h','j','k','l',';'],
+      ['z','x','c','v','b','n','m',',','.','/']
+    ];
+    const koKeys = [
+      ['ㅂ','ㅈ','ㄷ','ㄱ','ㅅ','ㅛ','ㅕ','ㅑ','ㅐ','ㅔ'],
+      ['ㅁ','ㄴ','ㅇ','ㄹ','ㅎ','ㅗ','ㅓ','ㅏ','ㅣ'],
+      ['ㅋ','ㅌ','ㅊ','ㅍ','ㅠ','ㅜ','ㅡ']
+    ];
+    const colors = ['red', 'blue', 'green', 'yellow'];
+
+
+    // 키보드 코드 → 한글 자모 매핑
+    const codeToKorean = {
+      KeyQ: 'ㅂ', KeyW: 'ㅈ', KeyE: 'ㄷ', KeyR: 'ㄱ', KeyT: 'ㅅ', KeyY: 'ㅛ', KeyU: 'ㅕ', KeyI: 'ㅑ', KeyO: 'ㅐ', KeyP: 'ㅔ',
+      KeyA: 'ㅁ', KeyS: 'ㄴ', KeyD: 'ㅇ', KeyF: 'ㄹ', KeyG: 'ㅎ', KeyH: 'ㅗ', KeyJ: 'ㅓ', KeyK: 'ㅏ', KeyL: 'ㅣ',
+      KeyZ: 'ㅋ', KeyX: 'ㅌ', KeyC: 'ㅊ', KeyV: 'ㅍ', KeyB: 'ㅠ', KeyN: 'ㅜ', KeyM: 'ㅡ'
+    };
+
+
+    let isKorean = false;
+    let composedText = '';
+    let hangulBuffer = [];
+    const keyboardDiv = document.getElementById('keyboard');
+    const paper = document.getElementById('paper');
+    const display = document.getElementById('displayWindow');
+    const langStatus = document.getElementById('langStatus');
+
+
+    function renderKeyboard() {
+      keyboardDiv.innerHTML = '';
+      const keySet = isKorean ? koKeys : enKeys;
+      keySet.forEach((line, i) => {
+        line.forEach(key => {
+          const btn = document.createElement('button');
+          btn.className = `key ${colors[i % colors.length]}`;
+          btn.textContent = key;
+          btn.dataset.value = key;
+          btn.onclick = () => {
+            handleCharInput(key);
+            blinkKey(key);
+          };
+          keyboardDiv.appendChild(btn);
+        });
+        keyboardDiv.appendChild(document.createElement('br'));
+      });
+    }
+
+
+    function toggleLanguage() {
+      isKorean = !isKorean;
+      langStatus.textContent = `현재 언어: ${isKorean ? '한글' : '영어'}`;
+      hangulBuffer = [];
+      renderKeyboard();
+    }
+
+
+    function blinkKey(keyChar) {
+      const keys = document.querySelectorAll('.key');
+      keys.forEach(key => {
+        if (key.dataset.value === keyChar) {
+          key.classList.add('active');
+          setTimeout(() => key.classList.remove('active'), 200);
+        }
+      });
+    }
+
+
+    function handleCharInput(char) {
+      if (isKorean) {
+        hangulBuffer.push(char);
+        composedText = Hangul.assemble(hangulBuffer);
+      } else {
+        composedText += char;
+      }
+      updateDisplay();
+    }
+
+
+    function handleTyping(e) {
+      if (e.key === '.') {
+        toggleLanguage();
+        e.preventDefault();
+        return;
+      }
+
+
+      if (e.key === 'Backspace') {
+        deleteLastChar();
+        e.preventDefault();
+        return;
+      }
+
+
+      if (isKorean) {
+        const korChar = codeToKorean[e.code];
+        if (korChar) {
+          handleCharInput(korChar);
+          blinkKey(korChar);
+          e.preventDefault();
+        }
+      } else {
+        if (e.key.length === 1) {
+          handleCharInput(e.key);
+          blinkKey(e.key);
+        }
+      }
+    }
+
+
+    function deleteLastChar() {
+      if (isKorean && hangulBuffer.length > 0) {
+        hangulBuffer.pop();
+        composedText = Hangul.assemble(hangulBuffer);
+      } else {
+        composedText = composedText.slice(0, -1);
+      }
+      updateDisplay();
+    }
+
+
+    function updateDisplay() {
+      paper.textContent = composedText;
+      display.textContent = composedText || '타자기 입력이 여기에 나타납니다...';
+    }
+
+
+    renderKeyboard();
+    document.addEventListener('keydown', handleTyping);
+  </script>
+</body>
+</html>
